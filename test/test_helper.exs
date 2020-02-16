@@ -1,0 +1,5 @@
+Mox.defmock(SpandexTesla.TracerMock, for: Spandex.Tracer)
+Mox.defmock(SpandexTesla.ClockMock, for: SpandexTesla.ClockBehaviour)
+Application.put_env(:spandex_tesla, :tracer, SpandexTesla.TracerMock)
+Application.put_env(:spandex_tesla, :clock_adapter, SpandexTesla.ClockMock)
+ExUnit.start()

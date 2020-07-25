@@ -40,7 +40,7 @@ defmodule SpandexTesla.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:spandex, "~> 2.2", optional: true},
+      {:spandex, "~> 3.0", optional: true},
       {:mox, "~> 0.5", only: :test},
       {:ex_doc, "~> 0.21.3", only: :dev, runtime: false}
     ]

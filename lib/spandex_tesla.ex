@@ -72,7 +72,7 @@ defmodule SpandexTesla do
     %{status: status, url: url, method: method} = request
     upcased_method = method |> to_string() |> String.upcase()
 
-    request_time = System.convert_time_unit(request_time, :microsecond, :native)
+    request_time = System.convert_time_unit(request_time, :nanosecond, :native)
 
     tracer().update_span(
       start: now - request_time,

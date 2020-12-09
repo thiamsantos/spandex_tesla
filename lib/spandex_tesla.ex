@@ -57,8 +57,8 @@ defmodule SpandexTesla do
       tracer().start_span("request", [])
 
       Logger.metadata(
-        trace_id: tracer().current_trace_id([]),
-        span_id: tracer().current_span_id([])
+        trace_id: to_string(tracer().current_trace_id([])),
+        span_id: to_string(tracer().current_span_id([]))
       )
 
       span_result(result, %{request_time: request_time, now: now})

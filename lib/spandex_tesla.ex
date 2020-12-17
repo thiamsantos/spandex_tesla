@@ -48,11 +48,9 @@ defmodule SpandexTesla do
   @doc """
   Telemetry handler. Attach it to the telemetry tesla events in order to trace the tesla calls.
   """
-  def handle_event([:tesla, :request], measurements, metadata, _) do
+  def handle_event([:tesla, :request], %{request_time: request_time}, %{result: result}, _) do
     if tracer().current_trace_id([]) do
-      now = clock_adapter().system_time()
-      %{request_time: request_time} = measurements
-      %{result: result} = metadata
+      now = clock_adapter().system_time() |> System.convert_time_unit(:native, :nanosecond)
 
       tracer().start_span("request", [])
 
@@ -67,12 +65,11 @@ defmodule SpandexTesla do
     end
   end
 
-  defp span_result({:ok, request}, measurements) do
-    %{request_time: request_time, now: now} = measurements
+  defp span_result({:ok, request}, %{request_time: duration_µs, now: now}) do
     %{status: status, url: url, method: method} = request
     upcased_method = method |> to_string() |> String.upcase()
 
-    request_time = System.convert_time_unit(request_time, :microsecond, :native)
+    request_time = System.convert_time_unit(duration_µs, :microsecond, :nanosecond)
 
     tracer().update_span(
       start: now - request_time,

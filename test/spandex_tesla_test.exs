@@ -31,7 +31,9 @@ defmodule SpandexTeslaTest do
       |> expect(:current_span_id, fn [] -> span_id end)
       |> expect(:start_span, fn "request", [] -> nil end)
       |> expect(:update_span, fn opts ->
-        assert opts[:start] == now - System.convert_time_unit(request_time, :nanosecond, :native)
+        assert opts[:start] ==
+                 now - System.convert_time_unit(request_time, :microsecond, :nanosecond)
+
         assert opts[:completion_time] == now
         assert opts[:service] == :tesla
         assert opts[:resource] == "GET https://google.com"

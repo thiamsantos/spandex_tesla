@@ -50,7 +50,7 @@ defmodule SpandexTesla do
   """
   def handle_event([:tesla, :request], measurements, metadata, _) do
     if tracer().current_trace_id([]) do
-      now = clock_adapter().system_time()
+      now = clock_adapter().system_time() |> System.convert_time_unit(:native, :nanosecond)
       %{request_time: request_time} = measurements
       %{result: result} = metadata
 
@@ -72,7 +72,7 @@ defmodule SpandexTesla do
     %{status: status, url: url, method: method} = request
     upcased_method = method |> to_string() |> String.upcase()
 
-    request_time = System.convert_time_unit(request_time, :nanosecond, :native)
+    request_time = System.convert_time_unit(request_time, :microsecond, :nanosecond)
 
     tracer().update_span(
       start: now - request_time,

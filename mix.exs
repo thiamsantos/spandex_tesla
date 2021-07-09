@@ -42,7 +42,8 @@ defmodule SpandexTesla.MixProject do
     [
       {:spandex, "~> 3.0", optional: true},
       {:mox, "~> 0.5", only: :test},
-      {:ex_doc, "~> 0.21.3", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.21.3", only: :dev, runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
 end

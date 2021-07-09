@@ -30,7 +30,7 @@ defmodule SpandexTesla do
   # in application.ex
   :telemetry.attach(
     "spandex-tesla-tracer",
-    [:tesla, :request],
+    [:tesla, :request, :start],
     &SpandexTesla.handle_event/4,
     nil
   )
@@ -48,48 +48,54 @@ defmodule SpandexTesla do
   @doc """
   Telemetry handler. Attach it to the telemetry tesla events in order to trace the tesla calls.
   """
-  def handle_event([:tesla, :request], measurements, metadata, _) do
+  def handle_event([:tesla, :request, :start], _measurements, _metadata, _config) do
     if tracer().current_trace_id([]) do
-      now = clock_adapter().system_time() |> System.convert_time_unit(:native, :nanosecond)
-      %{request_time: request_time} = measurements
-      %{result: result} = metadata
-
       tracer().start_span("request", [])
 
       Logger.metadata(
         trace_id: to_string(tracer().current_trace_id([])),
         span_id: to_string(tracer().current_span_id([]))
       )
+    end
+  end
 
-      span_result(result, %{request_time: request_time, now: now})
+  def handle_event([:tesla, :request, :stop], measurements, metadata, _config) do
+    if tracer().current_trace_id([]) do
+      now = clock_adapter().system_time()
+      %{duration: duration} = measurements
+      %{status: status, url: url, method: method} = metadata[:env]
+      upcased_method = method |> to_string() |> String.upcase()
+
+      tracer().update_span(
+        start: now - duration,
+        completion_time: now,
+        service: service(),
+        resource: "#{upcased_method} #{url}",
+        type: :web,
+        http: [
+          url: url,
+          status_code: status,
+          method: upcased_method
+        ]
+      )
 
       tracer().finish_span([])
     end
   end
 
-  defp span_result({:ok, request}, measurements) do
-    %{request_time: request_time, now: now} = measurements
-    %{status: status, url: url, method: method} = request
-    upcased_method = method |> to_string() |> String.upcase()
+  def handle_event([:tesla, :request, :exception], _measurements, metadata, _config) do
+    if tracer().current_trace_id([]) do
+      %{reason: reason} = metadata
 
-    request_time = System.convert_time_unit(request_time, :microsecond, :nanosecond)
+      tracer().span_error(%Error{message: inspect(reason)}, nil, [])
 
-    tracer().update_span(
-      start: now - request_time,
-      completion_time: now,
-      service: service(),
-      resource: "#{upcased_method} #{url}",
-      type: :web,
-      http: [
-        url: url,
-        status_code: status,
-        method: upcased_method
-      ]
-    )
-  end
+      tracer().finish_span([])
 
-  defp span_result({:error, reason}, _measurements) do
-    tracer().span_error(%Error{message: inspect(reason)}, nil, [])
+      Logger.metadata(
+        trace_id: to_string(tracer().current_trace_id([])),
+        span_id: to_string(tracer().current_span_id([]))
+      )
+    end
   end
 
   defp tracer do

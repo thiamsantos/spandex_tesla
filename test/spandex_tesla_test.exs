@@ -7,19 +7,28 @@ defmodule SpandexTeslaTest do
 
   describe "handle_event/4" do
     test "skip span when there is no trace_id" do
-      expect(TracerMock, :current_trace_id, fn _ -> nil end)
+      duration = 1_000
+
+      expect(TracerMock, :current_trace_id, 2, fn _ -> nil end)
 
       SpandexTesla.handle_event(
-        [:tesla, :request],
-        %{request_time: 1_000},
-        %{result: {:ok, %{status: 200, url: "https://google.com", method: :get}}},
+        [:tesla, :request, :start],
+        nil,
+        nil,
+        nil
+      )
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :stop],
+        %{duration: duration},
+        %{env: %{status: 200, url: "https://google.com", method: :get}},
         nil
       )
     end
 
     test "span tesla request success result" do
       now = System.system_time()
-      request_time = 1_000
+      duration = 1_000
       trace_id = "trace_id"
       span_id = "span_id"
 
@@ -27,30 +36,30 @@ defmodule SpandexTeslaTest do
       |> expect(:system_time, fn -> now end)
 
       TracerMock
-      |> expect(:current_trace_id, 2, fn [] -> trace_id end)
+      |> expect(:current_trace_id, 3, fn [] -> trace_id end)
       |> expect(:current_span_id, fn [] -> span_id end)
       |> expect(:start_span, fn "request", [] -> nil end)
       |> expect(:update_span, fn opts ->
-        assert opts[:start] ==
-                 now - System.convert_time_unit(request_time, :microsecond, :nanosecond)
-
+        assert opts[:start] == now - duration
         assert opts[:completion_time] == now
         assert opts[:service] == :tesla
         assert opts[:resource] == "GET https://google.com"
         assert opts[:type] == :web
-
-        assert opts[:http] == [
-                 url: "https://google.com",
-                 status_code: 200,
-                 method: "GET"
-               ]
+        assert opts[:http] == [url: "https://google.com", status_code: 200, method: "GET"]
       end)
       |> expect(:finish_span, fn [] -> nil end)
 
       SpandexTesla.handle_event(
-        [:tesla, :request],
-        %{request_time: request_time},
-        %{result: {:ok, %{status: 200, url: "https://google.com", method: :get}}},
+        [:tesla, :request, :start],
+        nil,
+        nil,
+        nil
+      )
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :stop],
+        %{duration: duration},
+        %{env: %{status: 200, url: "https://google.com", method: :get}},
         nil
       )
 
@@ -61,22 +70,18 @@ defmodule SpandexTeslaTest do
       trace_id = "trace_id"
       span_id = "span_id"
 
-      ClockMock
-      |> expect(:system_time, fn -> System.system_time() end)
-
       TracerMock
       |> expect(:current_trace_id, 2, fn [] -> trace_id end)
       |> expect(:current_span_id, fn [] -> span_id end)
-      |> expect(:start_span, fn "request", [] -> nil end)
       |> expect(:span_error, fn error, nil, [] ->
         assert error == %SpandexTesla.Error{message: inspect(:timeout)}
       end)
       |> expect(:finish_span, fn [] -> nil end)
 
       SpandexTesla.handle_event(
-        [:tesla, :request],
-        %{request_time: 1_000},
-        %{result: {:error, :timeout}},
+        [:tesla, :request, :exception],
+        %{duration: 1_000},
+        %{reason: :timeout},
         nil
       )
 

@@ -44,12 +44,7 @@ Attach the telemetry handler:
 
 ```elixir
 # in application.ex
-:telemetry.attach(
-  "spandex-tesla-tracer",
-  [:tesla, :request],
-  &SpandexTesla.handle_event/4,
-  nil
-)
+SpandexTesla.Telemetry.attach()
 ```
 
 The docs can

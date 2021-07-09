@@ -85,7 +85,7 @@ defmodule SpandexTesla do
 
   def handle_event([:tesla, :request, :exception], _measurements, metadata, _config) do
     if tracer().current_trace_id([]) do
-      %{reason: reason} = metadata
+      reason = metadata[:reason] || metadata[:error]
 
       tracer().span_error(%Error{message: inspect(reason)}, nil, [])
 

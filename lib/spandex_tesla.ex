@@ -93,6 +93,50 @@ defmodule SpandexTesla do
     end
   end
 
+  def handle_event([:tesla, :request], measurements, metadata, _) do
+    if tracer().current_trace_id([]) do
+      now = clock_adapter().system_time() |> System.convert_time_unit(:native, :nanosecond)
+      %{request_time: request_time} = measurements
+      %{result: result} = metadata
+
+      tracer().start_span("request", [])
+
+      Logger.metadata(
+        trace_id: to_string(tracer().current_trace_id([])),
+        span_id: to_string(tracer().current_span_id([]))
+      )
+
+      span_result(result, %{request_time: request_time, now: now})
+
+      tracer().finish_span([])
+    end
+  end
+
+  defp span_result({:ok, request}, measurements) do
+    %{request_time: request_time, now: now} = measurements
+    %{status: status, url: url, method: method} = request
+    upcased_method = method |> to_string() |> String.upcase()
+
+    request_time = System.convert_time_unit(request_time, :microsecond, :nanosecond)
+
+    tracer().update_span(
+      start: now - request_time,
+      completion_time: now,
+      service: service(),
+      resource: "#{upcased_method} #{url}",
+      type: :web,
+      http: [
+        url: url,
+        status_code: status,
+        method: upcased_method
+      ]
+    )
+  end
+
+  defp span_result({:error, reason}, _measurements) do
+    tracer().span_error(%Error{message: inspect(reason)}, nil, [])
+  end
+
   defp tracer do
     Application.fetch_env!(:spandex_tesla, :tracer)
   end

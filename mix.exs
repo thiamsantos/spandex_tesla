@@ -41,7 +41,6 @@ defmodule SpandexTesla.MixProject do
   defp deps do
     [
       {:spandex, "~> 3.0", optional: true},
-      {:tesla, ">= 1.3.3", optional: true},
       {:mox, "~> 0.5", only: :test},
       {:ex_doc, "~> 0.21.3", only: :dev, runtime: false}
     ]

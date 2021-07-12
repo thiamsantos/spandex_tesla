@@ -13,6 +13,6 @@ defmodule SpandexTesla.Telemetry do
       [:tesla, :request, :exception]
     ]
 
-    :telemetry.attach_many("spandex-tesla-tracer", tesla_events, &SpandexTesla.handle_event/4, nil)
+    :telemetry.attach_many(__MODULE__, tesla_events, &SpandexTesla.handle_event/4, nil)
   end
 end

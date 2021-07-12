@@ -28,12 +28,7 @@ defmodule SpandexTesla do
 
   ```elixir
   # in application.ex
-  :telemetry.attach(
-    "spandex-tesla-tracer",
-    [:tesla, :request, :start],
-    &SpandexTesla.handle_event/4,
-    nil
-  )
+  SpandexTesla.Telemetry.attach()
   ```
 
   """

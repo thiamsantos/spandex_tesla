@@ -62,6 +62,7 @@ defmodule SpandexTesla do
 
       update_span(
         %{duration: duration, method: method, now: now, status: status, url: url},
+        metadata,
         config || []
       )
 
@@ -97,27 +98,32 @@ defmodule SpandexTesla do
         span_id: to_string(tracer().current_span_id([]))
       )
 
-      span_result(result, %{request_time: request_time, now: now}, config || [])
+      span_result(result, %{request_time: request_time, now: now}, metadata, config || [])
 
       tracer().finish_span([])
     end
   end
 
-  defp span_result({:ok, request}, measurements, config) do
+  defp span_result({:ok, request}, measurements, metadata, config) do
     %{request_time: request_time, now: now} = measurements
     %{status: status, url: url, method: method} = request
 
     duration = System.convert_time_unit(request_time, :microsecond, :nanosecond)
 
-    update_span(%{duration: duration, method: method, now: now, status: status, url: url}, config)
+    update_span(
+      %{duration: duration, method: method, now: now, status: status, url: url},
+      metadata,
+      config
+    )
   end
 
-  defp span_result({:error, reason}, _measurements, _config) do
+  defp span_result({:error, reason}, _measurements, _metadata, _config) do
     tracer().span_error(%Error{message: inspect(reason)}, nil, [])
   end
 
   defp update_span(
          %{duration: duration, method: method, now: now, status: status, url: url},
+         metadata,
          config
        ) do
     upcased_method = method |> to_string() |> String.upcase()
@@ -126,7 +132,7 @@ defmodule SpandexTesla do
       start: now - duration,
       completion_time: now,
       service: service(),
-      resource: resource_name(upcased_method, url, config),
+      resource: resource_name(metadata, config),
       type: :web,
       http: [
         url: url,
@@ -136,28 +142,20 @@ defmodule SpandexTesla do
     )
   end
 
-  defp resource_name(method, url, config) when is_list(config) do
-    resource_groups = Keyword.get(config, :resource_groups, [])
+  defp resource_name(metadata, config) do
+    get_resource_name = Keyword.get(config, :resource, &default_resource_name/1)
 
-    Enum.reduce_while(
-      resource_groups,
-      "#{method} #{url}",
-      fn {group_method, pattern, group}, acc ->
-        if method == group_method && Regex.match?(pattern, url) do
-          {:halt, resource_name(method, url, group)}
-        else
-          {:cont, acc}
-        end
-      end
-    )
+    get_resource_name.(metadata)
   end
 
-  defp resource_name(method, _url, group) when is_binary(group) do
-    "#{method} #{group}"
+  defp default_resource_name(%{env: %{url: url, method: method}}) do
+    upcased_method = method |> to_string() |> String.upcase()
+    "#{upcased_method} #{url}"
   end
 
-  defp resource_name(method, url, group) when is_function(group) do
-    group.(method, url)
+  defp default_resource_name(%{result: {:ok, %{method: method, url: url}}}) do
+    upcased_method = method |> to_string() |> String.upcase()
+    "#{upcased_method} #{url}"
   end
 
   defp tracer do

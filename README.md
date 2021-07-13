@@ -51,26 +51,18 @@ be found at [https://hexdocs.pm/spandex_tesla](https://hexdocs.pm/spandex_tesla)
 
 ## Resource grouping
 
-You can pass a config keyword list to `SpandexTesla.Telemetry.attach/1` with `:resource_groups` key.
+You can pass a custom resource callback to `SpandexTesla.Telemetry.attach/1` with `:resource` key in the config. If none provided, resource name will default to `<METHOD> <URL>`.
 
-The first matching pattern in the list will be executed. If there is no matching pattern, resource name will default to `<method> <url>`.
+The resource callback takes telemetry event metadata (map) as parameter and returns a string resource name.
 
-The third element can either be a replacement string or a callback function that takes method and url parameters.
-
-```elixir
-SpandexTesla.Telemetry.attach(
-  resource_groups: [
-    {"GET", ~r"https://website.com/item/\d+", "https://website.com/item/<item-id>"}
-  ]
-)
-```
+See [Tesla.Middleware.Telemetry](https://hexdocs.pm/tesla/Tesla.Middleware.Telemetry.html#module-telemetry-events) for metadata structure, and also usage of middleware for URL event scoping.
 
 ```elixir
 SpandexTesla.Telemetry.attach(
-  resource_groups: [
-    {"GET", ~r"https://website.com/item/\d+",
-     fn method, url -> "#{method} #{Regex.replace(~r/\d/, url, "*")}" end}
-  ]
+  resource: fn %{env: %{url: url, method: method}} ->
+    upcased_method = method |> to_string() |> String.upcase()
+    "#{upcased_method} #{Regex.replace(~r/item\/(\d+$)/, url, "item/:item_id")}"
+  end
 )
 ```
 

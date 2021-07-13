@@ -51,7 +51,7 @@ be found at [https://hexdocs.pm/spandex_tesla](https://hexdocs.pm/spandex_tesla)
 
 ## Resource grouping
 
-You can pass a custom resource callback to `SpandexTesla.Telemetry.attach/1` with `:resource` key in the config. If none provided, resource name will default to `<METHOD> <URL>`.
+You can pass a custom resource callback to `SpandexTesla.Telemetry.attach/1` with `:resource` key in the config. If none provided, resource name will default to `<METHOD> <REQ_URL>`.
 
 The resource callback takes telemetry event metadata (map) as parameter and returns a string resource name.
 

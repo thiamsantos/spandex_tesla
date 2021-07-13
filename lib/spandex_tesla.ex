@@ -148,14 +148,18 @@ defmodule SpandexTesla do
     get_resource_name.(metadata)
   end
 
-  defp default_resource_name(%{env: %{url: url, method: method}}) do
+  defp default_resource_name(%{env: %{url: url, method: method, opts: opts}}) do
     upcased_method = method |> to_string() |> String.upcase()
-    "#{upcased_method} #{url}"
+    resource_url = Keyword.get(opts, :req_url, url)
+
+    "#{upcased_method} #{resource_url}"
   end
 
-  defp default_resource_name(%{result: {:ok, %{method: method, url: url}}}) do
+  defp default_resource_name(%{result: {:ok, %{method: method, url: url, opts: opts}}}) do
     upcased_method = method |> to_string() |> String.upcase()
-    "#{upcased_method} #{url}"
+    resource_url = Keyword.get(opts, :req_url, url)
+
+    "#{upcased_method} #{resource_url}"
   end
 
   defp tracer do

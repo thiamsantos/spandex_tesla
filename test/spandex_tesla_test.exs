@@ -21,7 +21,7 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request, :stop],
         %{duration: duration},
-        %{env: %{status: 200, url: "https://google.com", method: :get}},
+        %{env: %{status: 200, url: "https://google.com", method: :get, opts: []}},
         []
       )
     end
@@ -59,7 +59,7 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request, :stop],
         %{duration: duration},
-        %{env: %{status: 200, url: "https://google.com", method: :get}},
+        %{env: %{status: 200, url: "https://google.com", method: :get, opts: []}},
         []
       )
 
@@ -104,7 +104,7 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request, :stop],
         %{duration: duration},
-        %{env: %{status: 200, url: "https://google.com/item/555", method: :get}},
+        %{env: %{status: 200, url: "https://google.com/item/555", method: :get, opts: []}},
         resource: &resource_name/1
       )
 
@@ -141,7 +141,7 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request],
         %{request_time: 1_000},
-        %{result: {:ok, %{status: 200, url: "https://google.com", method: :get}}},
+        %{result: {:ok, %{status: 200, url: "https://google.com", method: :get, opts: []}}},
         []
       )
     end
@@ -179,7 +179,7 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request],
         %{request_time: request_time},
-        %{result: {:ok, %{status: 200, url: "https://google.com", method: :get}}},
+        %{result: {:ok, %{status: 200, url: "https://google.com", method: :get, opts: []}}},
         []
       )
 
@@ -219,7 +219,10 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request],
         %{request_time: request_time},
-        %{result: {:ok, %{status: 200, url: "https://google.com/item/555", method: :get}}},
+        %{
+          result:
+            {:ok, %{status: 200, url: "https://google.com/item/555", method: :get, opts: []}}
+        },
         resource: &resource_name/1
       )
 

@@ -54,24 +54,15 @@ defmodule SpandexTesla do
     end
   end
 
-  def handle_event([:tesla, :request, :stop], measurements, metadata, _config) do
+  def handle_event([:tesla, :request, :stop], measurements, metadata, config) do
     if tracer().current_trace_id([]) do
       now = clock_adapter().system_time()
       %{duration: duration} = measurements
       %{status: status, url: url, method: method} = metadata[:env]
-      upcased_method = method |> to_string() |> String.upcase()
 
-      tracer().update_span(
-        start: now - duration,
-        completion_time: now,
-        service: service(),
-        resource: "#{upcased_method} #{url}",
-        type: :web,
-        http: [
-          url: url,
-          status_code: status,
-          method: upcased_method
-        ]
+      update_span(
+        %{duration: duration, method: method, now: now, status: status, url: url},
+        config || []
       )
 
       tracer().finish_span([])
@@ -93,7 +84,7 @@ defmodule SpandexTesla do
     end
   end
 
-  def handle_event([:tesla, :request], measurements, metadata, _) do
+  def handle_event([:tesla, :request], measurements, metadata, config) do
     if tracer().current_trace_id([]) do
       now = clock_adapter().system_time() |> System.convert_time_unit(:native, :nanosecond)
       %{request_time: request_time} = measurements
@@ -106,24 +97,36 @@ defmodule SpandexTesla do
         span_id: to_string(tracer().current_span_id([]))
       )
 
-      span_result(result, %{request_time: request_time, now: now})
+      span_result(result, %{request_time: request_time, now: now}, config || [])
 
       tracer().finish_span([])
     end
   end
 
-  defp span_result({:ok, request}, measurements) do
+  defp span_result({:ok, request}, measurements, config) do
     %{request_time: request_time, now: now} = measurements
     %{status: status, url: url, method: method} = request
+
+    duration = System.convert_time_unit(request_time, :microsecond, :nanosecond)
+
+    update_span(%{duration: duration, method: method, now: now, status: status, url: url}, config)
+  end
+
+  defp span_result({:error, reason}, _measurements, _config) do
+    tracer().span_error(%Error{message: inspect(reason)}, nil, [])
+  end
+
+  defp update_span(
+         %{duration: duration, method: method, now: now, status: status, url: url},
+         config
+       ) do
     upcased_method = method |> to_string() |> String.upcase()
 
-    request_time = System.convert_time_unit(request_time, :microsecond, :nanosecond)
-
     tracer().update_span(
-      start: now - request_time,
+      start: now - duration,
       completion_time: now,
       service: service(),
-      resource: "#{upcased_method} #{url}",
+      resource: resource_name(upcased_method, url, config),
       type: :web,
       http: [
         url: url,
@@ -133,8 +136,28 @@ defmodule SpandexTesla do
     )
   end
 
-  defp span_result({:error, reason}, _measurements) do
-    tracer().span_error(%Error{message: inspect(reason)}, nil, [])
+  defp resource_name(method, url, config) when is_list(config) do
+    resource_groups = Keyword.get(config, :resource_groups, [])
+
+    Enum.reduce_while(
+      resource_groups,
+      "#{method} #{url}",
+      fn {group_method, pattern, group}, acc ->
+        if method == group_method && Regex.match?(pattern, url) do
+          {:halt, resource_name(method, url, group)}
+        else
+          {:cont, acc}
+        end
+      end
+    )
+  end
+
+  defp resource_name(method, _url, group) when is_binary(group) do
+    "#{method} #{group}"
+  end
+
+  defp resource_name(method, url, group) when is_function(group) do
+    group.(method, url)
   end
 
   defp tracer do

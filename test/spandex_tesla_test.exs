@@ -15,14 +15,14 @@ defmodule SpandexTeslaTest do
         [:tesla, :request, :start],
         nil,
         nil,
-        nil
+        []
       )
 
       SpandexTesla.handle_event(
         [:tesla, :request, :stop],
         %{duration: duration},
         %{env: %{status: 200, url: "https://google.com", method: :get}},
-        nil
+        []
       )
     end
 
@@ -53,14 +53,162 @@ defmodule SpandexTeslaTest do
         [:tesla, :request, :start],
         nil,
         nil,
-        nil
+        []
       )
 
       SpandexTesla.handle_event(
         [:tesla, :request, :stop],
         %{duration: duration},
         %{env: %{status: 200, url: "https://google.com", method: :get}},
-        nil
+        []
+      )
+
+      assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
+    end
+
+    test "span tesla request success result with matching resource group string" do
+      now = System.system_time()
+      duration = 1_000
+      trace_id = "trace_id"
+      span_id = "span_id"
+
+      ClockMock
+      |> expect(:system_time, fn -> now end)
+
+      TracerMock
+      |> expect(:current_trace_id, 3, fn [] -> trace_id end)
+      |> expect(:current_span_id, fn [] -> span_id end)
+      |> expect(:start_span, fn "request", [] -> nil end)
+      |> expect(:update_span, fn opts ->
+        assert opts[:start] == now - duration
+        assert opts[:completion_time] == now
+        assert opts[:service] == :tesla
+        assert opts[:resource] == "GET https://google.com/item/<item-id>"
+        assert opts[:type] == :web
+
+        assert opts[:http] == [
+                 url: "https://google.com/item/555",
+                 status_code: 200,
+                 method: "GET"
+               ]
+      end)
+      |> expect(:finish_span, fn [] -> nil end)
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :start],
+        nil,
+        nil,
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+", "https://google.com/item/<item-id>"}
+        ]
+      )
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :stop],
+        %{duration: duration},
+        %{env: %{status: 200, url: "https://google.com/item/555", method: :get}},
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+", "https://google.com/item/<item-id>"}
+        ]
+      )
+
+      assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
+    end
+
+    test "span tesla request success result with matching resource group function" do
+      now = System.system_time()
+      duration = 1_000
+      trace_id = "trace_id"
+      span_id = "span_id"
+
+      ClockMock
+      |> expect(:system_time, fn -> now end)
+
+      TracerMock
+      |> expect(:current_trace_id, 3, fn [] -> trace_id end)
+      |> expect(:current_span_id, fn [] -> span_id end)
+      |> expect(:start_span, fn "request", [] -> nil end)
+      |> expect(:update_span, fn opts ->
+        assert opts[:start] == now - duration
+        assert opts[:completion_time] == now
+        assert opts[:service] == :tesla
+        assert opts[:resource] == "GET https://google.com/item/***"
+        assert opts[:type] == :web
+
+        assert opts[:http] == [
+                 url: "https://google.com/item/555",
+                 status_code: 200,
+                 method: "GET"
+               ]
+      end)
+      |> expect(:finish_span, fn [] -> nil end)
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :start],
+        nil,
+        nil,
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+", "https://google.com/item/<item-id>"}
+        ]
+      )
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :stop],
+        %{duration: duration},
+        %{env: %{status: 200, url: "https://google.com/item/555", method: :get}},
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+",
+           fn method, url -> "#{method} #{Regex.replace(~r/\d/, url, "*")}" end}
+        ]
+      )
+
+      assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
+    end
+
+    test "span tesla request success result with no matching resource group" do
+      now = System.system_time()
+      duration = 1_000
+      trace_id = "trace_id"
+      span_id = "span_id"
+
+      ClockMock
+      |> expect(:system_time, fn -> now end)
+
+      TracerMock
+      |> expect(:current_trace_id, 3, fn [] -> trace_id end)
+      |> expect(:current_span_id, fn [] -> span_id end)
+      |> expect(:start_span, fn "request", [] -> nil end)
+      |> expect(:update_span, fn opts ->
+        assert opts[:start] == now - duration
+        assert opts[:completion_time] == now
+        assert opts[:service] == :tesla
+        assert opts[:resource] == "GET https://google.com/another-endpoint/555"
+        assert opts[:type] == :web
+
+        assert opts[:http] == [
+                 url: "https://google.com/another-endpoint/555",
+                 status_code: 200,
+                 method: "GET"
+               ]
+      end)
+      |> expect(:finish_span, fn [] -> nil end)
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :start],
+        nil,
+        nil,
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+", "https://google.com/item/<item-id>"}
+        ]
+      )
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :stop],
+        %{duration: duration},
+        %{env: %{status: 200, url: "https://google.com/another-endpoint/555", method: :get}},
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+", "https://google.com/item/<item-id>"}
+        ]
       )
 
       assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
@@ -82,7 +230,7 @@ defmodule SpandexTeslaTest do
         [:tesla, :request, :exception],
         %{duration: 1_000},
         %{reason: :timeout},
-        nil
+        []
       )
 
       assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
@@ -97,7 +245,7 @@ defmodule SpandexTeslaTest do
         [:tesla, :request],
         %{request_time: 1_000},
         %{result: {:ok, %{status: 200, url: "https://google.com", method: :get}}},
-        nil
+        []
       )
     end
 
@@ -135,7 +283,137 @@ defmodule SpandexTeslaTest do
         [:tesla, :request],
         %{request_time: request_time},
         %{result: {:ok, %{status: 200, url: "https://google.com", method: :get}}},
-        nil
+        []
+      )
+
+      assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
+    end
+
+    test "span tesla request success result with matching resource group string" do
+      now = System.system_time()
+      request_time = 1_000
+      trace_id = "trace_id"
+      span_id = "span_id"
+
+      ClockMock
+      |> expect(:system_time, fn -> now end)
+
+      TracerMock
+      |> expect(:current_trace_id, 2, fn [] -> trace_id end)
+      |> expect(:current_span_id, fn [] -> span_id end)
+      |> expect(:start_span, fn "request", [] -> nil end)
+      |> expect(:update_span, fn opts ->
+        assert opts[:start] ==
+                 now - System.convert_time_unit(request_time, :microsecond, :nanosecond)
+
+        assert opts[:completion_time] == now
+        assert opts[:service] == :tesla
+        assert opts[:resource] == "GET https://google.com/item/<item-id>"
+        assert opts[:type] == :web
+
+        assert opts[:http] == [
+                 url: "https://google.com/item/555",
+                 status_code: 200,
+                 method: "GET"
+               ]
+      end)
+      |> expect(:finish_span, fn [] -> nil end)
+
+      SpandexTesla.handle_event(
+        [:tesla, :request],
+        %{request_time: request_time},
+        %{result: {:ok, %{status: 200, url: "https://google.com/item/555", method: :get}}},
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+", "https://google.com/item/<item-id>"}
+        ]
+      )
+
+      assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
+    end
+
+    test "span tesla request success result with matching resource group function" do
+      now = System.system_time()
+      request_time = 1_000
+      trace_id = "trace_id"
+      span_id = "span_id"
+
+      ClockMock
+      |> expect(:system_time, fn -> now end)
+
+      TracerMock
+      |> expect(:current_trace_id, 2, fn [] -> trace_id end)
+      |> expect(:current_span_id, fn [] -> span_id end)
+      |> expect(:start_span, fn "request", [] -> nil end)
+      |> expect(:update_span, fn opts ->
+        assert opts[:start] ==
+                 now - System.convert_time_unit(request_time, :microsecond, :nanosecond)
+
+        assert opts[:completion_time] == now
+        assert opts[:service] == :tesla
+        assert opts[:resource] == "GET https://google.com/item/***"
+        assert opts[:type] == :web
+
+        assert opts[:http] == [
+                 url: "https://google.com/item/555",
+                 status_code: 200,
+                 method: "GET"
+               ]
+      end)
+      |> expect(:finish_span, fn [] -> nil end)
+
+      SpandexTesla.handle_event(
+        [:tesla, :request],
+        %{request_time: request_time},
+        %{result: {:ok, %{status: 200, url: "https://google.com/item/555", method: :get}}},
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+",
+           fn method, url -> "#{method} #{Regex.replace(~r/\d/, url, "*")}" end}
+        ]
+      )
+
+      assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
+    end
+
+    test "span tesla request success result with no matching resource group" do
+      now = System.system_time()
+      request_time = 1_000
+      trace_id = "trace_id"
+      span_id = "span_id"
+
+      ClockMock
+      |> expect(:system_time, fn -> now end)
+
+      TracerMock
+      |> expect(:current_trace_id, 2, fn [] -> trace_id end)
+      |> expect(:current_span_id, fn [] -> span_id end)
+      |> expect(:start_span, fn "request", [] -> nil end)
+      |> expect(:update_span, fn opts ->
+        assert opts[:start] ==
+                 now - System.convert_time_unit(request_time, :microsecond, :nanosecond)
+
+        assert opts[:completion_time] == now
+        assert opts[:service] == :tesla
+        assert opts[:resource] == "GET https://google.com/another-endpoint/555"
+        assert opts[:type] == :web
+
+        assert opts[:http] == [
+                 url: "https://google.com/another-endpoint/555",
+                 status_code: 200,
+                 method: "GET"
+               ]
+      end)
+      |> expect(:finish_span, fn [] -> nil end)
+
+      SpandexTesla.handle_event(
+        [:tesla, :request],
+        %{request_time: request_time},
+        %{
+          result:
+            {:ok, %{status: 200, url: "https://google.com/another-endpoint/555", method: :get}}
+        },
+        resource_groups: [
+          {"GET", ~r"https://google.com/item/\d+", "https://google.com/item/<item-id>"}
+        ]
       )
 
       assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
@@ -161,7 +439,7 @@ defmodule SpandexTeslaTest do
         [:tesla, :request],
         %{request_time: 1_000},
         %{result: {:error, :timeout}},
-        nil
+        []
       )
 
       assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]

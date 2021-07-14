@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 14-07-2021
+
 ### Added
 
 - Support for custom resource naming.
@@ -24,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 09-12-2020
 
-[Unreleased]: https://github.com/thiamsantos/spandex_tesla/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/thiamsantos/spandex_tesla/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.3.0
 [1.2.0]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.2.0
 [1.1.1]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.1.1
 [1.1.0]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.1.0

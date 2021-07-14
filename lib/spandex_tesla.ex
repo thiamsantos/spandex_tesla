@@ -1,37 +1,9 @@
 defmodule SpandexTesla do
-  @moduledoc """
-  Tracing integration between [tesla](https://hex.pm/packages/tesla) and [spandex](https://hex.pm/packages/spandex).
-  It leverages telemetry to get the [tesla](https://hex.pm/packages/tesla) events and trace them with [spandex](https://hex.pm/packages/spandex).
-
-  ## Usage
-
-  Configure the correct tracer to be used:
-
-  ```elixir
-  config :spandex_tesla
-    service: :tesla, # Optional
-    tracer: MyApp.Tracer, # Required
-  ```
-
-  Include the [telemetry middleware](https://hexdocs.pm/tesla/Tesla.Middleware.Telemetry.html#content) in your tesla client:
-
-  ```elixir
-  defmodule MyClient do
-    use Tesla
-
-    plug Tesla.Middleware.Telemetry
-
-  end
-  ```
-
-  Attach the telemetry handler:
-
-  ```elixir
-  # in application.ex
-  SpandexTesla.Telemetry.attach()
-  ```
-
-  """
+  @external_resource "README.md"
+  @moduledoc "README.md"
+             |> File.read!()
+             |> String.split("<!-- MDOC !-->")
+             |> Enum.fetch!(1)
 
   defmodule Error do
     @moduledoc """

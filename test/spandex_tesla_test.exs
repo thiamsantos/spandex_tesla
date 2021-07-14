@@ -237,6 +237,7 @@ defmodule SpandexTeslaTest do
 
       assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
     end
+
     test "span tesla request success result with req_url" do
       now = System.system_time()
       request_time = 1_000
@@ -270,7 +271,16 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request],
         %{request_time: request_time},
-        %{result: {:ok, %{status: 200, url: "https://google.com/item/555", method: :get, opts: [req_url: "https://google.com/item/:item_id"]}}},
+        %{
+          result:
+            {:ok,
+             %{
+               status: 200,
+               url: "https://google.com/item/555",
+               method: :get,
+               opts: [req_url: "https://google.com/item/:item_id"]
+             }}
+        },
         []
       )
 

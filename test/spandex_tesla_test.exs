@@ -1,7 +1,8 @@
 defmodule SpandexTeslaTest do
   use ExUnit.Case, async: true
   import Mox
-  alias SpandexTesla.{ClockMock, TracerMock}
+  alias SpandexTesla.ClockMock
+  alias SpandexTesla.TracerMock
 
   setup :verify_on_exit!
 

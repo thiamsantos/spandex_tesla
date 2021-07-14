@@ -1,48 +1,63 @@
 defmodule SpandexTesla.MixProject do
   use Mix.Project
 
+  @name "SpandexTesla"
+  @version "1.2.0"
+  @description "Tracing integration between tesla and spandex"
+  @repo_url "https://github.com/thiamsantos/spandex_tesla"
+
   def project do
     [
-      app: :spandex_tesla,
-      version: "1.2.0",
+      app: :mxpanel,
+      version: @version,
       elixir: "~> 1.7",
-      start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
+      name: @name,
+      description: @description,
       deps: deps(),
-      description: "Tracing integration between tesla and spandex",
+      docs: docs(),
       package: package(),
-      name: "SpandexTesla",
-      docs: docs()
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger]
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   defp package do
-    [
+    %{
+      licenses: ["Apache-2.0"],
       maintainers: ["Thiago Santos"],
-      licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/thiamsantos/spandex_tesla"}
-    ]
+      links: %{"GitHub" => @repo_url}
+    }
   end
 
   defp docs do
     [
-      main: "SpandexTesla",
-      source_url: "https://github.com/thiamsantos/spandex_tesla"
+      main: @name,
+      source_ref: "v#{@version}",
+      source_url: @repo_url,
+      skip_undefined_reference_warnings_on: ["CHANGELOG.md"],
+      extras: ["CHANGELOG.md"]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:spandex, "~> 3.0", optional: true},
-      {:mox, "~> 0.5", only: :test},
-      {:ex_doc, "~> 0.21.3", only: :dev, runtime: false}
+
+      # dev/test
+      {:credo_naming, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.14.0", only: :test},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end

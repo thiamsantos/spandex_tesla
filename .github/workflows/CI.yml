@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  quality:
+    name: quality (Elixir ${{matrix.elixir}} | Erlang/OTP ${{matrix.otp}})
+    runs-on: ubuntu-latest
+    env:
+      MIX_ENV: test
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir: 1.7.4
+            otp: 21.3.8.17
+          - elixir: 1.8.2
+            otp: 21.3.8.17
+          - elixir: 1.9.4
+            otp: 21.3.8.17
+          - elixir: 1.10.4
+            otp: 21.3.8.17
+          - elixir: 1.11.2
+            otp: 21.3.8.17
+          - elixir: 1.11.2
+            otp: 23.0.3
+          - elixir: 1.12.1
+            otp: 24.0.1
+            check_formatted: true
+            warnings_as_errors: true
+            check_unused_deps: true
+            coverage: true
+            credo: true
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-elixir@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+
+      - name: Install Dependencies
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+          mix deps.get
+
+      - run: mix format --check-formatted
+        if: matrix.check_formatted
+
+      - run: mix deps.unlock --check-unused
+        if: matrix.check_unused_deps
+
+      - run: mix compile --warnings-as-errors
+        if: matrix.warnings_as_errors
+
+      - run: mix credo
+        if: matrix.credo
+
+      - run: mix test
+        if: ${{!matrix.coverage}}
+
+      - run: mix coveralls.github
+        if: ${{matrix.coverage}}

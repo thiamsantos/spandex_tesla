@@ -6,7 +6,8 @@ Tracing integration between [tesla](https://hex.pm/packages/tesla) and [spandex]
 It leverages telemetry to get the [tesla](https://hex.pm/packages/tesla) events and trace them with [spandex](https://hex.pm/packages/spandex).
 
 [![Hex.pm Version](http://img.shields.io/hexpm/v/spandex_tesla.svg?style=flat)](https://hex.pm/packages/spandex_tesla)
-[![Build Status](https://github.com/thiamsantos/spandex_tesla/workflows/CI/badge.svg)](https://github.com/thiamsantos/spandex_tesla/actions)
+[![CI](https://github.com/thiamsantos/spandex_tesla/workflows/CI/badge.svg?branch=master)](https://github.com/thiamsantos/spandex_tesla/actions?query=branch%3Amaster)
+[![Coverage Status](https://coveralls.io/repos/github/thiamsantos/spandex_tesla/badge.svg?branch=master)](https://coveralls.io/github/thiamsantos/spandex_tesla?branch=master)
 
 ## Installation
 
@@ -87,4 +88,4 @@ Copyright 2021 (c) Thiago Santos.
 
 spandex_tesla source code is released under Apache 2 License.
 
-Check [LICENSE](https://github.com/thiamsantos/spandex_tesla/blob/main/LICENSE) file for more information.
+Check [LICENSE](https://github.com/thiamsantos/spandex_tesla/blob/master/LICENSE) file for more information.

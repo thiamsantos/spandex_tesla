@@ -71,7 +71,15 @@ SpandexTesla.Telemetry.attach(
 )
 ```
 
+## Changelog
+
+See the [changelog](CHANGELOG.md).
+
 <!-- MDOC !-->
+
+## Contributing
+
+See the [contributing file](CONTRIBUTING.md).
 
 ## License
 

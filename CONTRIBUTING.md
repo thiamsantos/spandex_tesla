@@ -31,12 +31,12 @@ And submit your pull request after making sure that all tests pass and they are 
 1. Bump the version on README and mix.exs
 2. Update the changelog
 3. Make a commit for the new version `git commit -am "vx.x.x"`
-4. Tag the version `git tag "vx.x.x" && git push origin main --tags`
+4. Tag the version `git tag "vx.x.x" && git push origin master --tags`
 5. Publish to hex `mix hex.publish`
 6. Create a [new release][new-release]
 
 [fork]: https://github.com/thiamsantos/spandex_tesla/fork
-[code-of-conduct]: https://github.com/thiamsantos/spandex_tesla/blob/main/CODE_OF_CONDUCT.md
+[code-of-conduct]: https://github.com/thiamsantos/spandex_tesla/blob/master/CODE_OF_CONDUCT.md
 [issue]: https://github.com/thiamsantos/spandex_tesla/issues
 [new-issue]: https://github.com/thiamsantos/spandex_tesla/issues/new
-[new-release]: https://github.com/thiamsantos/spandex_tesla/releases/new?body=Checkout+the+%5Bchangelog%5D%28https%3A%2F%2Fgithub.com%2Fthiamsantos%2Fspandex_tesla%2Fblob%2Fmain%2FCHANGELOG.md%29
+[new-release]: https://github.com/thiamsantos/spandex_tesla/releases/new?body=Checkout+the+%5Bchangelog%5D%28https%3A%2F%2Fgithub.com%2Fthiamsantos%2Fspandex_tesla%2Fblob%2Fmaster%2FCHANGELOG.md%29

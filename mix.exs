@@ -8,7 +8,7 @@ defmodule SpandexTesla.MixProject do
 
   def project do
     [
-      app: :mxpanel,
+      app: :spandex_tesla,
       version: @version,
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),

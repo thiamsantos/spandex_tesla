@@ -32,11 +32,21 @@ defmodule SpandexTesla do
       %{duration: duration} = measurements
       %{status: status, url: url, method: method} = metadata[:env]
 
-      update_span(
-        %{duration: duration, method: method, now: now, status: status, url: url},
+      trace_opts = %{duration: duration, method: method, now: now, status: status, url: url}
+      |> format_trace_options(
         metadata,
         config || []
       )
+
+      case status do
+        x when x not in 200..299 ->
+          tracer().span_error(
+            %Error{message: "Request has failed with status response #{status}"},
+            nil,
+            trace_opts
+          )
+        _ -> tracer().update_span(trace_opts)
+      end
 
       tracer().finish_span([])
     end
@@ -45,7 +55,6 @@ defmodule SpandexTesla do
   def handle_event([:tesla, :request, :exception], _measurements, metadata, _config) do
     if tracer().current_trace_id([]) do
       reason = metadata[:reason] || metadata[:error]
-
       tracer().span_error(%Error{message: inspect(reason)}, nil, [])
 
       tracer().finish_span([])
@@ -81,26 +90,27 @@ defmodule SpandexTesla do
     %{status: status, url: url, method: method} = request
 
     duration = System.convert_time_unit(request_time, :microsecond, :nanosecond)
-
-    update_span(
-      %{duration: duration, method: method, now: now, status: status, url: url},
+    trace_opts = %{duration: duration, method: method, now: now, status: status, url: url}
+    |> format_trace_options(
       metadata,
       config
     )
+
+    tracer().update_span(trace_opts)
   end
 
   defp span_result({:error, reason}, _measurements, _metadata, _config) do
     tracer().span_error(%Error{message: inspect(reason)}, nil, [])
   end
 
-  defp update_span(
+  defp format_trace_options(
          %{duration: duration, method: method, now: now, status: status, url: url},
          metadata,
          config
        ) do
     upcased_method = method |> to_string() |> String.upcase()
 
-    tracer().update_span(
+    [
       start: now - duration,
       completion_time: now,
       service: service(),
@@ -111,7 +121,7 @@ defmodule SpandexTesla do
         status_code: status,
         method: upcased_method
       ]
-    )
+    ]
   end
 
   defp resource_name(metadata, config) do

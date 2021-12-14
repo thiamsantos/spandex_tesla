@@ -26,6 +26,27 @@ defmodule SpandexTesla do
     end
   end
 
+  def handle_event([:tesla, :request, :stop], measurements, %{error: error, env: env} = metadata, config) do
+    now = clock_adapter().system_time()
+    %{duration: duration} = measurements
+    %{url: url, method: method} = env
+
+    trace_opts =
+      format_trace_options(
+        %{duration: duration, status: nil, method: method, now: now, url: url},
+        metadata,
+        config || []
+      )
+
+    tracer().span_error(
+      %Error{message: error},
+      nil,
+      trace_opts
+    )
+
+    tracer().finish_span([])
+  end
+
   def handle_event([:tesla, :request, :stop], measurements, metadata, config) do
     if tracer().current_trace_id([]) do
       now = clock_adapter().system_time()

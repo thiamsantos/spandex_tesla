@@ -32,11 +32,12 @@ defmodule SpandexTesla do
       %{duration: duration} = measurements
       %{status: status, url: url, method: method} = metadata[:env]
 
-      trace_opts = %{duration: duration, method: method, now: now, status: status, url: url}
-      |> format_trace_options(
-        metadata,
-        config || []
-      )
+      trace_opts =
+        format_trace_options(
+          %{duration: duration, method: method, now: now, status: status, url: url},
+          metadata,
+          config || []
+        )
 
       case status do
         x when x not in 200..299 ->
@@ -45,7 +46,9 @@ defmodule SpandexTesla do
             nil,
             trace_opts
           )
-        _ -> tracer().update_span(trace_opts)
+
+        _ ->
+          tracer().update_span(trace_opts)
       end
 
       tracer().finish_span([])
@@ -90,11 +93,13 @@ defmodule SpandexTesla do
     %{status: status, url: url, method: method} = request
 
     duration = System.convert_time_unit(request_time, :microsecond, :nanosecond)
-    trace_opts = %{duration: duration, method: method, now: now, status: status, url: url}
-    |> format_trace_options(
-      metadata,
-      config
-    )
+
+    trace_opts =
+      format_trace_options(
+        %{duration: duration, method: method, now: now, status: status, url: url},
+        metadata,
+        config
+      )
 
     tracer().update_span(trace_opts)
   end

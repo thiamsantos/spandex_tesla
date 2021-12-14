@@ -206,7 +206,14 @@ defmodule SpandexTeslaTest do
       SpandexTesla.handle_event(
         [:tesla, :request, :stop],
         %{duration: duration},
-        %{env: %{status: status_code_response, url: "https://google.com/item/555", method: :get, opts: []}},
+        %{
+          env: %{
+            status: status_code_response,
+            url: "https://google.com/item/555",
+            method: :get,
+            opts: []
+          }
+        },
         resource: &resource_name/1
       )
 

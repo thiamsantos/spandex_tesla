@@ -26,7 +26,12 @@ defmodule SpandexTesla do
     end
   end
 
-  def handle_event([:tesla, :request, :stop], measurements, %{error: error, env: env} = metadata, config) do
+  def handle_event(
+        [:tesla, :request, :stop],
+        measurements,
+        %{error: error, env: env} = metadata,
+        config
+      ) do
     now = clock_adapter().system_time()
     %{duration: duration} = measurements
     %{url: url, method: method} = env

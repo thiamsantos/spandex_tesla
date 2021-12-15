@@ -178,7 +178,7 @@ defmodule SpandexTeslaTest do
       |> expect(:current_span_id, fn [] -> span_id end)
       |> expect(:start_span, fn "request", [] -> nil end)
       |> expect(:span_error, fn error, nil, opts ->
-        assert error == %SpandexTesla.Error{message: :timeout}
+        assert error == %SpandexTesla.Error{message: "timeout"}
         assert opts[:start] == now - duration
         assert opts[:completion_time] == now
         assert opts[:service] == :tesla

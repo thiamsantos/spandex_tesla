@@ -17,7 +17,7 @@ by adding `spandex_tesla` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:spandex_tesla, "~> 1.4.0"}
+    {:spandex_tesla, "~> 1.5.0"}
   ]
 end
 ```

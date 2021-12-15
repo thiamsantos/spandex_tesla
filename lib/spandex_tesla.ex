@@ -44,7 +44,7 @@ defmodule SpandexTesla do
       )
 
     tracer().span_error(
-      %Error{message: error},
+      %Error{message: Atom.to_string(error)},
       nil,
       trace_opts
     )

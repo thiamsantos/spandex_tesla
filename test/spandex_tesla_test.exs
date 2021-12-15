@@ -164,6 +164,60 @@ defmodule SpandexTeslaTest do
       assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
     end
 
+    test "span tesla request with error on result metadata" do
+      now = System.system_time()
+      duration = 1_000
+      trace_id = "trace_id"
+      span_id = "span_id"
+
+      ClockMock
+      |> expect(:system_time, fn -> now end)
+
+      TracerMock
+      |> expect(:current_trace_id, 2, fn [] -> trace_id end)
+      |> expect(:current_span_id, fn [] -> span_id end)
+      |> expect(:start_span, fn "request", [] -> nil end)
+      |> expect(:span_error, fn error, nil, opts ->
+        assert error == %SpandexTesla.Error{message: :timeout}
+        assert opts[:start] == now - duration
+        assert opts[:completion_time] == now
+        assert opts[:service] == :tesla
+        assert opts[:resource] == "GET https://google.com/item/:item_id"
+        assert opts[:type] == :web
+
+        assert opts[:http] == [
+                 url: "https://google.com/item/555",
+                 status_code: nil,
+                 method: "GET"
+               ]
+      end)
+      |> expect(:finish_span, fn [] -> nil end)
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :start],
+        nil,
+        nil,
+        resource: &resource_name/1
+      )
+
+      SpandexTesla.handle_event(
+        [:tesla, :request, :stop],
+        %{duration: duration},
+        %{
+          env: %{
+            url: "https://google.com/item/555",
+            method: :get,
+            status: nil,
+            opts: []
+          },
+          error: :timeout
+        },
+        resource: &resource_name/1
+      )
+
+      assert Logger.metadata() == [span_id: "span_id", trace_id: "trace_id"]
+    end
+
     test "span tesla request with status code different from 2xx should sent error to spandex" do
       now = System.system_time()
       duration = 1_000

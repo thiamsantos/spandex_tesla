@@ -43,8 +43,15 @@ defmodule SpandexTesla do
         config || []
       )
 
+    message =
+      case error do
+        err when is_binary(err) -> err
+        err when is_atom(err) -> to_string(err)
+        err -> inspect(err)
+      end
+
     tracer().span_error(
-      %Error{message: Atom.to_string(error)},
+      %Error{message: message},
       nil,
       trace_opts
     )

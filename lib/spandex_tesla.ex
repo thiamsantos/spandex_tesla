@@ -43,15 +43,8 @@ defmodule SpandexTesla do
         config || []
       )
 
-    message =
-      case error do
-        err when is_binary(err) -> err
-        err when is_atom(err) -> to_string(err)
-        err -> inspect(err)
-      end
-
     tracer().span_error(
-      %Error{message: message},
+      %Error{message: span_error_message(error)},
       nil,
       trace_opts
     )
@@ -181,6 +174,10 @@ defmodule SpandexTesla do
 
     "#{upcased_method} #{resource_url}"
   end
+
+  defp span_error_message(error) when is_binary(error), do: error
+  defp span_error_message(error) when is_atom(error), do: to_string(error)
+  defp span_error_message(error), do: inspect(error)
 
   defp tracer do
     Application.fetch_env!(:spandex_tesla, :tracer)

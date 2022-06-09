@@ -44,7 +44,7 @@ defmodule SpandexTesla do
       )
 
     tracer().span_error(
-      %Error{message: Atom.to_string(error)},
+      %Error{message: span_error_message(error)},
       nil,
       trace_opts
     )
@@ -174,6 +174,10 @@ defmodule SpandexTesla do
 
     "#{upcased_method} #{resource_url}"
   end
+
+  defp span_error_message(error) when is_binary(error), do: error
+  defp span_error_message(error) when is_atom(error), do: to_string(error)
+  defp span_error_message(error), do: inspect(error)
 
   defp tracer do
     Application.fetch_env!(:spandex_tesla, :tracer)

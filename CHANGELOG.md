@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.6.0] - 10-06-2022
+
+### Fixed
+
+- A Tesla result error value has the type `any()`. `Atom.to_string/1` raises when the Tesla error is anything but an atom, causing the telemetry handler to detach. Set the span error message to a reasonable string interpretation of the error.
+
 ## [1.5.1] - 15-12-2021
 
 ### Fixed
@@ -44,8 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 09-12-2020
 
-[Unreleased]: https://github.com/thiamsantos/spandex_tesla/compare/v1.5.1...HEAD
-[1.5.1]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.5.0
+[Unreleased]: https://github.com/thiamsantos/spandex_tesla/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.6.0
+[1.5.1]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.5.1
 [1.5.0]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.5.0
 [1.4.0]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.4.0
 [1.3.0]: https://github.com/thiamsantos/spandex_tesla/releases/tag/v1.3.0

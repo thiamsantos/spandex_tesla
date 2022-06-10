@@ -2,7 +2,7 @@ defmodule SpandexTesla.MixProject do
   use Mix.Project
 
   @name "SpandexTesla"
-  @version "1.5.1"
+  @version "1.6.0"
   @description "Tracing integration between tesla and spandex"
   @repo_url "https://github.com/thiamsantos/spandex_tesla"
 

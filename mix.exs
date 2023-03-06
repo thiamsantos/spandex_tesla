@@ -56,7 +56,7 @@ defmodule SpandexTesla.MixProject do
       {:credo_naming, "~> 2.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.15.0", only: :test},
+      {:excoveralls, "~> 0.16.0", only: :test},
       {:mox, "~> 1.0", only: :test}
     ]
   end
